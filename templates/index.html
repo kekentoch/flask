@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% from 'bootstrap5/form.html' import render_form %}
+
+{% block content %}
+{{ super() }}
+<br>
+
+<div class="container-fluid">
+    <h1 class="text-center">
+        ТОП АРТИСТОВ ЧАРТА
+    </h1>
+</div>
+<br>
+<br> <br>
+<div class="row row-cols-1 row-cols-md-3 mb-3 text-center">
+    <div class="col">
+        <div class="card mb-4 rounded-3 shadow-sm">
+            <div class="card-header py-3">
+                <h4 class="my-0 fw-normal">TOP 1</h4>
+            </div>
+            <div class="card-body">
+                <h1 class="card-title pricing-card-title">INSamat&KAM</h1>
+                <ul class="list-unstyled mt-3 mb-4">
+                    <li>10 users included</li>
+                    <li>2 tracks reliased</li>
+                    <li>0 listend</li>
+                    <li>Help</li>
+                </ul>
+                <button type="button" class="w-100 btn btn-lg btn-primary">Subsribe</button>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card mb-4 rounded-3 shadow-sm">
+            <div class="card-header py-3">
+                <h4 class="my-0 fw-normal">TOP 2</h4>
+            </div>
+            <div class="card-body">
+                <h1 class="card-title pricing-card-title">SHAMAN</small></h1>
+                <ul class="list-unstyled mt-3 mb-4">
+                    <li>20 rybley ot kremlya</li>
+                    <li>10 shkolnikov slushaut</li>
+                    <li>Im russian</li>
+                    <li>Help</li>
+                </ul>
+                <button type="button" class="w-100 btn btn-lg btn-primary">Subsribe</button>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card mb-4 rounded-3 shadow-sm">
+            <div class="card-header py-3 ">
+                <h4 class="my-0 fw-normal">TOP 3</h4>
+            </div>
+            <div class="card-body">
+                <h1 class="card-title pricing-card-title">ANDREY ALUFREV</h1>
+                <ul class="list-unstyled mt-3 mb-4">
+                    <li>30</li>
+                    <li>15</li>
+                    <li>Phone</li>
+                    <li>Help</li>
+                </ul>
+                <button type="button" class="w-100 btn btn-lg btn-primary">Subsribe</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
