@@ -11,7 +11,7 @@ class Database:
     def addUser(self, dict_values):
 
         sql = '''INSERT INTO Users (nickname, password, email, creation_date, country_id) 
-                 VALUES (:nickname, :password, :email , date('now'), (SELECT country_id FROM Countries WHERE country=:country LIMIT 1));'''
+                 VALUES (:nickname, :password, :email , date('now'), :country);'''
         try:
             self.__cur.execute(sql, dict_values)
             self.__db.commit()
@@ -19,8 +19,20 @@ class Database:
             print("Ошибка " + str(e))
             return False
 
+    def CheckUser(self, email):
+        sql = "SELECT EXISTS (SELECT email FROM users WHERE email LIKE :email LIMIT 1)"
+        try:
+            self.__cur.execute(sql, (email,))
+            res = self.__cur.fetchone()
+            if not res[0]:
+                print("Пользователь не найден")
+                return False
+            return True
+        except sqlite3.Error as e:
+            print("Ошибка получения данных из БД " + str(e))
+
     def getUser(self, user_id):
-        sql = ''' SELECT * FROM Users WHERE user_id =:user_id LIMIT 1 '''
+        sql = ''' SELECT * FROM Users WHERE user_id = :user_id LIMIT 1 '''
         try:
             self.__cur.execute(sql, (user_id,))
             res = tuple(self.__cur.fetchone())
@@ -53,23 +65,17 @@ class Database:
             print("Ошибка получения данных из БД " + str(e))
         return False
 
-    # def checkUser(self, dict_values):
-    #     sql = '''SELECT password FROM Users WHERE email=:email LIMIT 1'''
-    #     try:
-    #         self.__cur.execute(sql, (dict_values.get('email'),))
-    #         res = tuple(self.__cur.fetchone())
-    #         if dict_values.get('password') == str(res[0]):
-    #             return True
-    #     except sqlite3.Error as e:
-    #         print("Ошибка " + str(e))
-    #         return False
-    #     return False
-
     def getCountries(self):
-        sql = '''SELECT country FROM countries;'''
+        sql = '''SELECT * FROM countries;'''
         try:
             self.__cur.execute(sql)
-            res = tuple(self.__cur.fetchall())
+            fromdb = self.__cur.fetchall()
+            res = []
+            try:
+                for i in fromdb:
+                    res.append(tuple(i))
+            except:
+                print("Ошибка парсинга данных")
             if res: return res
         except:
             print("Ошибка чтения из БД")
@@ -77,13 +83,9 @@ class Database:
 
     def addCounties(self):
         sql = '''INSERT INTO Countries (country) VALUES (?);'''
-        # sqldel = '''DELETE FROm Countries '''
-        # sqlreset = '''DELETE FROM sqlite_sequence where name='Countries';'''
         with open("src/result.txt", "r") as file:
             counties = file.read().split("\n")
         try:
-            # self.__cur.execute(sqlreset)
-            # self.__cur.execute(sqldel)
             for c in counties:
                 self.__cur.execute(sql, [c])
             self.__db.commit()

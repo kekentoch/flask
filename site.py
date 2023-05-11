@@ -3,8 +3,9 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from fdatabase import Database
 from flask_bootstrap import Bootstrap5
 from flask_wtf import CSRFProtect
+from flask_wtf.csrf import CSRFError
 from UserLogin import UserLogin
-from forms import LoginForm
+from forms import LoginForm, SignupForm
 
 from flask import Flask
 
@@ -60,6 +61,11 @@ def before_request():
     dbase = Database(db)
 
 
+@app.errorhandler(CSRFError)
+def handle_csrf_error(e):
+    return flask.render_template('csrf_error.html', reason=e.description), 400
+
+
 @app.teardown_appcontext
 def close_db(error):
     '''Закрываем соединение с БД, если оно было установлено'''
@@ -86,17 +92,37 @@ def profile():
 
 @app.route("/signup", methods=['GET', 'POST'])
 def signup():
+    form = SignupForm()
+    form.country.choices = [(g[0], g[1]) for g in dbase.getCountries()]
+    if flask_login.current_user.is_authenticated:
+        return flask.redirect(flask.url_for('profile'))
     if flask.request.method == 'POST':
-        email = flask.request.form.get('email')
-        print(email)
-        return flask.redirect(flask.url_for('login'))
-    else:
-        return flask.render_template('signup.html')
+        if form.validate_on_submit():
+            try:
+                data = {
+                    'nickname': flask.request.form['username'],
+                    'password': generate_password_hash(flask.request.form['password']),
+                    'email': flask.request.form['email'],
+                    'country': flask.request.form['country']
+                }
+                if not dbase.CheckUser(data.get('email')):
+                    dbase.addUser(data)
+                    return flask.redirect(flask.url_for('login'))
+                else:
+                    flask.flash("Пользователь с такой почтой уже существует", "error")
+            except:
+                flask.flash("Неверная пара логин/пароль", "error")
+
+    return flask.render_template('signup.html', form=form)
+    # if flask.request.method == 'POST':
+    #     return flask.render_template("signup.html", title="Регистрация")
+    # else:
+    #     return flask.render_template('signup.html', form=form)
 
 
 @app.route("/bd", methods=['GET', 'POST'])
 def db():
-    weq = dbase.getUser(1)
+    print(dbase.getUser(1))
 
 
 @app.route("/login", methods=['GET', 'POST'])
@@ -106,14 +132,16 @@ def login():
         return flask.redirect(flask.url_for('profile'))
     if form.validate_on_submit():
         if flask.request.method == 'POST':
-            user = dbase.getUserByEmail(flask.request.form['username'])
-            if user and check_password_hash(user['password'], flask.request.form['password']):
-                userlogin = UserLogin().create(user)
-                rm = True if flask.request.form.get('remainme') else False
-                flask_login.login_user(userlogin, remember=rm)
-                return flask.redirect(flask.request.args.get("next") or flask.url_for("profile"))
-            flask.flash("Неверная пара логин/пароль", "error")
-        flask.flash("Введите данные", "error")
+            try:
+                user = dbase.getUserByEmail(flask.request.form['email'])
+                if user and check_password_hash(user['password'], flask.request.form['password']):
+                    userlogin = UserLogin().create(user)
+                    rm = True if flask.request.form.get('remainme') else False
+                    flask_login.login_user(userlogin, remember=rm)
+                    return flask.redirect(flask.request.args.get("next") or flask.url_for("profile"))
+                flask.flash("Неверная пара логин/пароль", "error")
+            except:
+                flask.flash("Неверная пара логин/пароль", "error")
 
     return flask.render_template('login.html', form=form)
 
